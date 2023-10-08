@@ -37,9 +37,9 @@ jobs:
           AWS_SECRET_ACCESS_KEY: '${{ secrets.AWS_SECRET_ACCESS_KEY }}'
           AWS_REGION: 'ap-south-1'
         run: >
-          aws ecr get-login-password --region $AWS_REGION | docker login
-          --username AWS --password-stdin ${{ secrets.DEV_ECR_REPOSITORY_URI }}
-
+          aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin ${{ secrets.DEV_ECR_REPOSITORY_URI }}
+          echo 'AWS_ACCESS_KEY_ID'
+          echo "AWS_SECRET_ACCESS_KEY"
           docker push ${{ secrets.DEV_ECR_REPOSITORY_URI }}/my-app:latest
 
 
