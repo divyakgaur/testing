@@ -36,10 +36,10 @@ jobs:
           AWS_ACCESS_KEY_ID: '${{ secrets.AWS_ACCESS_KEY_ID }}'
           AWS_SECRET_ACCESS_KEY: '${{ secrets.AWS_SECRET_ACCESS_KEY }}'
           AWS_REGION: 'ap-south-1'
-        run: |
+        run: >
           aws ecr get-login-password --region $AWS_REGION | docker login 
           --username AWS --password-stdin ${{ secrets.DEV_ECR_REPOSITORY_URI }}          
-          docker push ${{ secrets.DEV_ECR_REPOSITORY_URI }}/my-app:latest
+          docker push 295730835881.dkr.ecr.ap-south-1.amazonaws.com/dev-account/my-app:latest
   
 
       - name: Push Docker image to Prod ECR (Manual)
