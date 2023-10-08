@@ -1,0 +1,55 @@
+name: Docker Build and Push
+'on':
+  push:
+    branches:
+      - main
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Assume AWS Role (Dev Account)
+        id: assume-dev-role
+        run: >
+          aws sts assume-role \
+            --role-arn arn:aws:iam::${{ secrets.DEV_AWS_ACCOUNT_ID }}:role/ECRDevAccessRole \
+            --role-session-name GitHubActions
+          echo "::set-output name=AWS_ACCESS_KEY_ID::$(echo ${{ steps.assume-dev-role.outputs.stdout }} | jq -r
+          '.Credentials.AccessKeyId')"
+          echo "::set-output name=AWS_SECRET_ACCESS_KEY::$(echo ${{ steps.assume-dev-role.outputs.stdout }} | jq -r
+          '.Credentials.SecretAccessKey')"
+          echo "::set-output name=AWS_SESSION_TOKEN::$(echo ${{ steps.assume-dev-role.outputs.stdout }} | jq -r
+          '.Credentials.SessionToken')"
+          
+      - name: Login to Docker Hub
+        run: >-
+          echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+      - name: Build Docker image
+        run: 'docker build -t my-app:latest .'
+      - name: Tag Docker image
+        run: >-
+          docker tag my-app:latest ${{ secrets.DEV_ECR_REPOSITORY_URI }}/my-app:latest
+      - name: Push Docker image to Dev ECR
+        env:
+          AWS_ACCESS_KEY_ID: '${{ secrets.AWS_ACCESS_KEY_ID }}'
+          AWS_SECRET_ACCESS_KEY: '${{ secrets.AWS_SECRET_ACCESS_KEY }}'
+          AWS_REGION: 'ap-south-1'
+        run: >
+          aws ecr get-login-password --region $AWS_REGION | docker login
+          --username AWS --password-stdin ${{ secrets.DEV_ECR_REPOSITORY_URI }}
+
+          docker push ${{ secrets.DEV_ECR_REPOSITORY_URI }}/my-app:latest
+
+
+      - name: Push Docker image to Prod ECR (Manual)
+        if: github.ref == 'refs/heads/main'
+        env:
+          AWS_ACCESS_KEY_ID: '${{ secrets.AWS_ACCESS_KEY_ID }}'
+          AWS_SECRET_ACCESS_KEY: '${{ secrets.AWS_SECRET_ACCESS_KEY }}'
+          AWS_REGION: 'ap-south-1'
+        run: >
+          aws ecr get-login-password --region $AWS_REGION | docker login
+          --username AWS --password-stdin ${{ secrets.PROD_ECR_REPOSITORY_URI }}
+
+          docker push ${{ secrets.PROD_ECR_REPOSITORY_URI }}/my-app:latest
