@@ -29,7 +29,7 @@ jobs:
       
       - name: Tag Docker image
         run: >-
-          docker tag my-app:latest ${{ secrets.DEV_ECR_REPOSITORY_URI }}/my-app:latest
+          docker tag my-app:latest ${{ secrets.DEV_ECR_REPOSITORY_URI }}:latest
       
       - name: Push Docker image to Dev ECR
         env:
@@ -40,7 +40,7 @@ jobs:
           aws ecr get-login-password --region $AWS_REGION | docker login
           --username AWS --password-stdin ${{ secrets.DEV_ECR_REPOSITORY_URI }}
 
-          docker push ${{ secrets.DEV_ECR_REPOSITORY_URI }}/my-app:latest
+          docker push ${{ secrets.DEV_ECR_REPOSITORY_URI }}:latest
   
 
       - name: Push Docker image to Prod ECR (Manual)
