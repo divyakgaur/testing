@@ -53,4 +53,4 @@ jobs:
           aws ecr get-login-password --region $AWS_REGION | docker login
           --username AWS --password-stdin ${{ secrets.PROD_ECR_REPOSITORY_URI }}
 
-          docker push ${{ secrets.PROD_ECR_REPOSITORY_URI }}/my-app:latest
+          docker push ${{ secrets.PROD_ECR_REPOSITORY_URI }}:latest
