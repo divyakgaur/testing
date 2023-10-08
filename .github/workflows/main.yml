@@ -24,14 +24,13 @@ jobs:
           AWS_SECRET_ACCESS_KEY: '${{ secrets.AWS_SECRET_ACCESS_KEY }}'
           AWS_REGION: 'ap-south-1'
           
-      - name: Login to Docker Hub
-        run: >-
-          echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
       - name: Build Docker image
         run: 'docker build -t my-app:latest .'
+      
       - name: Tag Docker image
         run: >-
           docker tag my-app:latest ${{ secrets.DEV_ECR_REPOSITORY_URI }}/my-app:latest
+      
       - name: Push Docker image to Dev ECR
         env:
           AWS_ACCESS_KEY_ID: '${{ secrets.AWS_ACCESS_KEY_ID }}'
