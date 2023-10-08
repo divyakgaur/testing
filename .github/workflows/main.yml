@@ -13,7 +13,7 @@ jobs:
         id: assume-dev-role
         run: >
           OUTPUT=$(aws sts assume-role \
-            --role-arn arn:aws:iam::${{ secrets.DEV_AWS_ACCOUNT_ID }}:role/ECRDevAccessRole \
+            --role-arn arn:aws:iam::295730835881:role/ECRDevAccessRole \
             --role-session-name GitHubActions) || echo "Failed to assume role"
             
           echo "::set-output name=AWS_ACCESS_KEY_ID::$(echo $OUTPUT | jq -r '.Credentials.AccessKeyId')"
