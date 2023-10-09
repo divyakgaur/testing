@@ -9,37 +9,39 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-south-1
+        
       - name: Assume AWS Role (Dev Account)
         id: assume-dev-role
-        run: >
-          OUTPUT=$(aws sts assume-role \
-            --role-arn arn:aws:iam::295730835881:role/ECRDevAccessRole \
-            --role-session-name GitHubActions) || echo "Failed to assume role"
+        run: |
+          OUTPUT=$(aws sts assume-role --role-arn "arn:aws:iam::295730835881:role/ECRDevAccessRole" --role-session-name GitHubActions)
             
           echo "::set-output name=AWS_ACCESS_KEY_ID::$(echo $OUTPUT | jq -r '.Credentials.AccessKeyId')"
           echo "::set-output name=AWS_SECRET_ACCESS_KEY::$(echo $OUTPUT | jq -r '.Credentials.SecretAccessKey')"
           echo "::set-output name=AWS_SESSION_TOKEN::$(echo $OUTPUT | jq -r '.Credentials.SessionToken')"
-        env:
-          AWS_ACCESS_KEY_ID: '${{ secrets.AWS_ACCESS_KEY_ID }}'
-          AWS_SECRET_ACCESS_KEY: '${{ secrets.AWS_SECRET_ACCESS_KEY }}'
-          AWS_REGION: 'ap-south-1'
           
       - name: Build Docker image
-        run: 'docker build -t my-app:latest .'
-      
-      - name: Tag Docker image
-        run: >-
-          docker tag my-app:latest ${{ secrets.DEV_ECR_REPOSITORY_URI }}:latest
-      
+        run: "docker build -t ${{ secrets.DEV_ECR_REPOSITORY_URI }}:latest ."
+        
       - name: Push Docker image to Dev ECR
         env:
           AWS_ACCESS_KEY_ID: '${{ secrets.AWS_ACCESS_KEY_ID }}'
           AWS_SECRET_ACCESS_KEY: '${{ secrets.AWS_SECRET_ACCESS_KEY }}'
           AWS_REGION: 'ap-south-1'
-        run: >
+        run: |
+          export AWS_ACCESS_KEY_ID="${{ steps.assume-dev-role.outputs.AWS_ACCESS_KEY_ID }}"
+          export AWS_SECRET_ACCESS_KEY="${{ steps.assume-dev-role.outputs.AWS_SECRET_ACCESS_KEY }}"
+          export AWS_SESSION_TOKEN="${{ steps.assume-dev-role.outputs.AWS_SESSION_TOKEN }}"
+          
           aws ecr get-login-password --region $AWS_REGION | docker login
           --username AWS --password-stdin ${{ secrets.DEV_ECR_REPOSITORY_URI }}
-
+          
           docker push ${{ secrets.DEV_ECR_REPOSITORY_URI }}:latest
   
 
