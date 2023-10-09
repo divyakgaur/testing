@@ -50,5 +50,5 @@ jobs:
           aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin ${{ secrets.PROD_ECR_REPOSITORY_URI }}
           
           docker tag ${{ secrets.DEV_ECR_REPOSITORY_URI }}:latest ${{ secrets.PROD_ECR_REPOSITORY_URI }}:latest
-          
+          docker images
           docker push ${{ secrets.PROD_ECR_REPOSITORY_URI }}:latest
